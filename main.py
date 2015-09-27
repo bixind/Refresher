@@ -21,9 +21,10 @@ def update():
         last_message_id = response[0]['id']
         for msg in response:
             try:
-		 data = urlencode({'user_id' : msg['user_id'], 'message' : msg['body'], 'access_token' : key, 'v' : '5.37'})
-            	 urlopen("https://api.vk.com/method/messages.send?" + data)
-	    sleep(3)
+                data = urlencode({'user_id' : msg['user_id'], 'message' : msg['body'], 'access_token' : key, 'v' : '5.37'})
+                w = urlopen("https://api.vk.com/method/messages.send?" + data)
+            finally:
+                sleep(3)
 
 
 
