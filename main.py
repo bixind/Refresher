@@ -17,16 +17,13 @@ def update():
         response = json.loads(w.read().decode())['response']['items']
     except:
         return
-    print(response)
     if (response):
         last_message_id = response[0]['id']
         for msg in response:
-            data = urlencode({'user_id' : msg['user_id'],
-                              'message' : msg['body'],
-                              'access_token' : key,
-                              'v' : '5.37'
-                              })
-            urlopen("https://api.vk.com/method/messages.send?" + data)
+            try:
+		 data = urlencode({'user_id' : msg['user_id'], 'message' : msg['body'], 'access_token' : key, 'v' : '5.37'})
+            	 urlopen("https://api.vk.com/method/messages.send?" + data)
+	    sleep(3)
 
 
 
@@ -46,7 +43,6 @@ frequency = int(config.get('freq', 300))
 data = urlencode({'last_message_id' : last_message_id,
                           'count' : 10,
                           'access_token' : key})
-print(data)
 w = urlopen("https://api.vk.com/method/messages.get?" + data)
 response = json.loads(w.read().decode())['response'][1:]
 if (response):
