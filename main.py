@@ -41,7 +41,7 @@ for lines in f:
 f.close()
 
 key = config.get('key')
-frequency = int(config.get('freq', 1))
+frequency = int(config.get('freq', 300))
 
 data = urlencode({'last_message_id' : last_message_id,
                           'count' : 10,
