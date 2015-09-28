@@ -1,11 +1,20 @@
 from urllib.request import *
 from urllib.parse import *
 from time import *
+from session import *
 import json
 
-last_message_id = 0
+def configparse(name):
+    f = open(name, 'r')
+    cnfg = dict()
+    for lines in f:
+        buf = lines.split()
+        cnfg[buf[0]] = buf[1]
+    f.close()
+    return cnfg
 
-def update():
+
+def update(curnses):
     global last_message_id
     try:
         data = urlencode({'last_message_id' : last_message_id,
@@ -31,29 +40,23 @@ def update():
 
 print('Refresher has started!')
 
-f = open('conf.txt', 'r')
-config = dict()
-for lines in f:
-    buf = lines.split()
-    config[buf[0]] = buf[1]
-f.close()
+config = configparse('conf.txt')
 
 key = config.get('key')
 frequency = int(config.get('freq', 300))
 
-data = urlencode({'last_message_id' : last_message_id,
-                          'count' : 10,
-                          'access_token' : key})
-w = urlopen("https://api.vk.com/method/messages.get?" + data)
-response = json.loads(w.read().decode())['response'][1:]
-if (response):
-    last_message_id = response[0]['mid']
+sesn = Session(config['key'])
 
-update()
+refr = Refresher(sesn)
+
+response = refr.getnewmessages()
+
+update(sesn)
 last_update = time()
-if (key):
-    while (True):
-        if (last_update + frequency < time()):
-            last_update = int(time())
-            update()
-        sleep(1)
+print('Session initialized')
+
+while (True):
+    if (last_update + frequency < time()):
+        last_update = int(time())
+        update(sesn)
+    sleep(1)
