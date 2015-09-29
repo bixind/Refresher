@@ -59,10 +59,11 @@ class Refresher:
     switch = {'#zapis' : post}
 
     def update(self):
-        response = self.getnewmessages();
-        for msg in reversed(response['response']['items']):
-            tags = gethashtags(msg['body'])
-            if (tags):
-                self.switch.get(tags[0], self.echo)(self, msg, *tags)
-            else:
-                self.echo(msg)
+        response = self.getnewmessages()
+        if (response['response']['items']):
+            for msg in reversed(response['response']['items']):
+                tags = gethashtags(msg['body'])
+                if (tags):
+                    self.switch.get(tags[0], self.echo)(self, msg, *tags)
+                else:
+                    self.echo(msg)
