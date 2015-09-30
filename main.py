@@ -22,7 +22,14 @@ frequency = int(config.get('freq', 300))
 
 sesn = Session(config['key'])
 
-refr = Refresher(sesn, config)
+mesgr = Messenger(sesn)
+wallr = Waller(sesn, config['group'])
+
+tasks = Tasker(mesgr.getecho(), [mesgr.getswitch(), wallr.getswitch()], [])
+
+groupr = Grouper(sesn, config['group'])
+
+print(groupr.switch)
 
 last_update = time()
 print('Session initialized')
@@ -30,6 +37,7 @@ print('Session initialized')
 while (True):
     if (last_update + frequency < time()):
         last_update = int(time())
-        refr.update()
+        tasks.executetasks(mesgr.getnewmessages())
+        tasks.update()
     else:
         sleep(1)
