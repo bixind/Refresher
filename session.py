@@ -45,7 +45,12 @@ class Requester:
         return self.request('messages.send', **kwargs)
 
     def getswitch(self):
-        return dict([[name, (lambda msg, *args : self.switch[name](self, msg, *args))] for name in self.switch])
+        if (super().__thisclass__ != Requester):
+            d = super().getswitch()
+        else:
+            d = dict()
+        d.update(dict([[name, (lambda msg, *args : self.switch[name](self, msg, *args))] for name in self.switch]))
+        return d
 
     def getf(self, func):
         return lambda *args, **kwargs : func(self, *args, **kwargs)
@@ -107,9 +112,14 @@ class Waller(Requester):
         crl.post : post,
     }
 
-class Grouper(Waller):
+class Homeworker(Waller):
     def __init__(self, session, group):
         super().__init__(session, group)
         self.group = group
 
+    switch = Waller.switch.copy()
+
+    switch.update({
+        crl.hw : Waller.post
+    })
 
