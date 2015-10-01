@@ -23,19 +23,17 @@ frequency = int(config.get('freq', 300))
 sesn = Session(config['key'])
 
 mesgr = Messenger(sesn)
-wallr = Waller(sesn, config['group'])
+hwr = Homeworker(sesn, config['group'])
 
-tasks = Tasker(mesgr.getecho(), [mesgr.getswitch(), wallr.getswitch()], [])
+tasks = Tasker(mesgr.getecho(), [mesgr.getswitch(), hwr.getswitch()], [])
 
-groupr = Grouper(sesn, config['group'])
-
-print(groupr.switch)
 
 last_update = time()
 print('Session initialized')
 
 while (True):
     if (last_update + frequency < time()):
+        print(time())
         last_update = int(time())
         tasks.executetasks(mesgr.getnewmessages())
         tasks.update()
