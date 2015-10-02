@@ -7,6 +7,9 @@ import json
 def gethashtags(s):
     return [word for word in s.split() if (word and word[0] == '#' and word is not '#')]
 
+def getmethod(cls, func):
+    return lambda *args, **kwargs : func(cls, *args, **kwargs)
+
 
 class Session:
     last_request = 0
@@ -38,7 +41,11 @@ class Requester:
         self.session = session
 
     def request(self, method, **kwargs):
-        return self.session.request(method, **kwargs)
+        response = self.session.request(method, **kwargs)
+        if (response and not response.get('error', False)):
+            return response
+        else:
+            return None
 
     def reply(self, user_id, **kwargs):
         kwargs['user_id'] = user_id
@@ -52,17 +59,18 @@ class Requester:
         d.update(dict([[name, (lambda msg, *args : self.switch[name](self, msg, *args))] for name in self.switch]))
         return d
 
-    def getf(self, func):
-        return lambda *args, **kwargs : func(self, *args, **kwargs)
-
-
 class Tasker:
-    def __init__(self, default, switches, updates):
+    def __init__(self, default):
         self.switch = dict()
-        self.updates = updates
+        self.updates = []
         self.default = default
+
+    def addswitches(self, *switches):
         for sw in switches:
             self.switch.update(sw)
+
+    def addupates(self, *updates):
+        self.updates.extend(updates)
 
     def executetasks(self, response):
         if (response['response']['items']):
@@ -103,10 +111,15 @@ class Waller(Requester):
     def __init__(self, session, wall):
         super().__init__(session)
         self.wall = wall
+        response = self.session.request('groups.getMembers', group_id = -int(self.wall))
+        self.permitted_users = set()#response['response']['items'])
 
     def post(self, msg, *args):
-        self.request('wall.post', owner_id = self.wall, from_group = 1, message = msg['body'])
-        self.reply(msg['user_id'], message='Posted')
+        if msg['user_id'] in self.permitted_users:
+            self.request('wall.post', owner_id = self.wall, from_group = 1, message = msg['body'])
+            self.reply(msg['user_id'], message='Posted')
+        else:
+            self.reply(msg['user_id'], message = 'Not permitted')
 
     switch = {
         crl.post : post,
@@ -116,6 +129,22 @@ class Homeworker(Waller):
     def __init__(self, session, group):
         super().__init__(session, group)
         self.group = group
+
+    def update(self, *args, **kwargs):
+        response = self.request('wall.get', owner_id = self.group, count = 50)
+        if (response):
+            items = response['response']['items']
+            homework = dict([w, 'unknown\n'] for w in crl.subject.values())
+            for it in reversed(items):
+                tags = gethashtags(it['text'])
+                if len(tags) > 1 and tags[0] == crl.hw:
+                    homework[tags[1]] = 'https://vk.com/wall' + str(self.group) + '_' + str(it['id']) + '\n' + asctime(gmtime(float(it['date']))) + '\n' + it['text'] + '\n'
+            desclist = []
+            for sbj in homework:
+                desclist.append(sbj + ' - ' + homework[sbj])
+            ndesc = '\n'.join(desclist)
+            print(self.session.request('groups.edit', group_id = -int(self.group), description = ndesc))
+
 
     switch = Waller.switch.copy()
 
