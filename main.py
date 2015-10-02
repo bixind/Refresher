@@ -25,7 +25,9 @@ sesn = Session(config['key'])
 mesgr = Messenger(sesn)
 hwr = Homeworker(sesn, config['group'])
 
-tasks = Tasker(mesgr.getecho(), [mesgr.getswitch(), hwr.getswitch()], [])
+tasks = Tasker(mesgr.getecho())
+tasks.addswitches(mesgr.getswitch(), hwr.getswitch())
+tasks.addupates(getmethod(hwr, hwr.update))
 
 
 last_update = time()
