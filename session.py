@@ -112,7 +112,7 @@ class Waller(Requester):
         super().__init__(session)
         self.wall = wall
         response = self.session.request('groups.getMembers', group_id = -int(self.wall))
-        self.permitted_users = set()#response['response']['items'])
+        self.permitted_users = set(response['response']['items'])
 
     def post(self, msg, *args):
         if msg['user_id'] in self.permitted_users:
